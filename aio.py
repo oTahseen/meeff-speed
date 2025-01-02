@@ -23,13 +23,16 @@ aio_markup_processing = InlineKeyboardMarkup(inline_keyboard=[
 user_states = {}
 
 # Fetch users from the API
-async def fetch_users(session, token):
+async def fetch_users(session, token, batch_size=50):
     url = "https://api.meeff.com/user/explore/v2/?lat=-3.7895238&lng=-38.5327365"
     headers = {"meeff-access-token": token, "Connection": "keep-alive"}
+    users = []
     async with session.get(url, headers=headers) as response:
         if response.status != 200:
-            return []
-        return (await response.json()).get("users", [])
+            return users
+        response_users = (await response.json()).get("users", [])
+        users.extend(response_users[:batch_size])
+    return users
 
 # Update status message
 async def update_status_message(bot, user_id, state, template):
@@ -47,9 +50,7 @@ async def update_status_message(bot, user_id, state, template):
 
 # Process fetched users
 async def process_users(session, users, token, state, bot, user_id):
-    for user in users:
-        if not state["running"]:
-            break
+    async def process_user(user):
         url = f"https://api.meeff.com/user/undoableAnswer/v5/?userId={user['_id']}&isOkay=1"
         headers = {"meeff-access-token": token, "Connection": "keep-alive"}
         async with session.get(url, headers=headers) as response:
@@ -57,11 +58,15 @@ async def process_users(session, users, token, state, bot, user_id):
             if data.get("errorCode") == "LikeExceeded":
                 state["messages"][-1] += "\nDaily like limit reached."
                 return True
-        state["total_added_friends"] += 1
-        if state["total_added_friends"] % 7 == 0:
-            state["messages"][-1] = f"{state['messages'][-1].split('\n')[0]}\nAdded Friends: {state['total_added_friends']}"
-            await update_status_message(bot, user_id, state, f"Total Added Friends: {state['total_added_friends']}")
-    return False
+            state["total_added_friends"] += 1
+            if state["total_added_friends"] % 7 == 0:
+                state["messages"][-1] = f"{state['messages'][-1].split('\n')[0]}\nAdded Friends: {state['total_added_friends']}"
+                await update_status_message(bot, user_id, state, f"Total Added Friends: {state['total_added_friends']}")
+        return False
+
+    tasks = [process_user(user) for user in users]
+    results = await asyncio.gather(*tasks)
+    return any(results)
 
 # Core process for managing requests
 async def run_requests(user_id, bot, status_message_id):
