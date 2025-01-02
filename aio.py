@@ -58,8 +58,9 @@ async def process_users(session, users, token, state, bot, user_id):
                 state["messages"][-1] += "\nDaily like limit reached."
                 return True
         state["total_added_friends"] += 1
-        state["messages"][-1] = f"{state['messages'][-1].split('\n')[0]}\nAdded Friends: {state['total_added_friends']}"
-        await update_status_message(bot, user_id, state, f"Total Added Friends: {state['total_added_friends']}")
+        if state["total_added_friends"] % 7 == 0:
+            state["messages"][-1] = f"{state['messages'][-1].split('\n')[0]}\nAdded Friends: {state['total_added_friends']}"
+            await update_status_message(bot, user_id, state, f"Total Added Friends: {state['total_added_friends']}")
     return False
 
 # Core process for managing requests
@@ -87,7 +88,6 @@ async def run_requests(user_id, bot, status_message_id):
                 users = await fetch_users(session, token)
                 if not users or await process_users(session, users, token, state, bot, user_id):
                     break
-                await asyncio.sleep(5)
 
     final_message = f"Total Accounts: {state['total_accounts']}\n\n" + "\n\n".join(state["messages"]) + f"\n\nTotal Added Friends: {state['total_added_friends']}"
     await bot.edit_message_text(
