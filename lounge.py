@@ -1,3 +1,4 @@
+ 
 import aiohttp
 import asyncio
 import logging
@@ -34,6 +35,9 @@ async def open_chatroom(token, user_id):
 
     async with aiohttp.ClientSession() as session:
         async with session.post(CHATROOM_URL, json=payload, headers=headers) as response:
+            if response.status == 412:
+                logging.error(f"Failed to open chatroom: {response.status} (User disabled)")
+                return None
             if response.status != 200:
                 logging.error(f"Failed to open chatroom: {response.status}")
                 return None
@@ -67,6 +71,7 @@ async def send_lounge(token, message="hi", status_message=None, bot=None, chat_i
             break
 
         total_users += len(users)
+        disabled_users = 0
         for user in users:
             user_id = user["user"]["_id"]
             chatroom_id = await open_chatroom(token, user_id)
@@ -80,6 +85,12 @@ async def send_lounge(token, message="hi", status_message=None, bot=None, chat_i
                         text=f"Lounge Users: {total_users} Message sent: {sent_count}",
                     )
                 logging.info(f"Sent message to {user['user']['name']} in chatroom {chatroom_id}.")
+            else:
+                disabled_users += 1
             await asyncio.sleep(0.02)  # Avoid hitting API rate limits
+
+        if disabled_users == len(users):
+            logging.info("All users in the lounge are disabled.")
+            break
 
     logging.info(f"Finished sending messages. Total Lounge Users: {total_users}, Messages sent: {sent_count}")
