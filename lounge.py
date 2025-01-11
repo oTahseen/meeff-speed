@@ -1,4 +1,3 @@
- 
 import aiohttp
 import asyncio
 import logging
@@ -60,6 +59,16 @@ async def send_message(token, chatroom_id, message):
                 return None
             return await response.json()
 
+async def handle_user(token, user, message, bot, chat_id, status_message):
+    user_id = user["user"]["_id"]
+    chatroom_id = await open_chatroom(token, user_id)
+    if chatroom_id:
+        await send_message(token, chatroom_id, message)
+        logging.info(f"Sent message to {user['user']['name']} in chatroom {chatroom_id}.")
+        return True
+    else:
+        return False
+
 async def send_lounge(token, message="hi", status_message=None, bot=None, chat_id=None):
     sent_count = 0
     total_users = 0
@@ -71,23 +80,18 @@ async def send_lounge(token, message="hi", status_message=None, bot=None, chat_i
             break
 
         total_users += len(users)
-        disabled_users = 0
-        for user in users:
-            user_id = user["user"]["_id"]
-            chatroom_id = await open_chatroom(token, user_id)
-            if chatroom_id:
-                await send_message(token, chatroom_id, message)
-                sent_count += 1
-                if bot and chat_id and status_message:
-                    await bot.edit_message_text(
-                        chat_id=chat_id,
-                        message_id=status_message.message_id,
-                        text=f"Lounge Users: {total_users} Message sent: {sent_count}",
-                    )
-                logging.info(f"Sent message to {user['user']['name']} in chatroom {chatroom_id}.")
-            else:
-                disabled_users += 1
-            await asyncio.sleep(0.02)  # Avoid hitting API rate limits
+        tasks = [handle_user(token, user, message, bot, chat_id, status_message) for user in users]
+        results = await asyncio.gather(*tasks)
+
+        sent_count += sum(results)
+        disabled_users = len(users) - sum(results)
+
+        if bot and chat_id and status_message:
+            await bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=status_message.message_id,
+                text=f"Lounge Users: {total_users} Message sent: {sent_count}",
+            )
 
         if disabled_users == len(users):
             logging.info("All users in the lounge are disabled.")
