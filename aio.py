@@ -32,6 +32,7 @@ async def fetch_users(session, token, batch_size=50):
             return users
         response_users = (await response.json()).get("users", [])
         users.extend(response_users[:batch_size])
+    await asyncio.sleep(5)  # Add a delay of 1 second between requests
     return users
 
 # Update status message
@@ -62,6 +63,7 @@ async def process_users(session, users, token, state, bot, user_id):
             if state["total_added_friends"] % 7 == 0:
                 state["messages"][-1] = f"{state['messages'][-1].split('\n')[0]}\nAdded Friends: {state['total_added_friends']}"
                 await update_status_message(bot, user_id, state, f"Total Added Friends: {state['total_added_friends']}")
+        await asyncio.sleep(5)  # Add a delay of 1 second between requests
         return False
 
     tasks = [process_user(user) for user in users]
@@ -161,7 +163,7 @@ async def handle_hi(callback_query, action, target):
         await action(token, "hi", bot, user_id)
         state["messages"][-1] = f"{state['messages'][-1].split('\n')[0]}\n'Hi' sent to {target}."
         await update_status_message(bot, user_id, state, f"'Hi' sent to {target}.")
-
+        
     final_message = f"Total Accounts: {state['total_accounts']}\n\n" + "\n\n".join(state["messages"])
     await bot.edit_message_text(
         chat_id=user_id,
@@ -195,7 +197,7 @@ async def handle_skip(callback_query):
         await unsubscribe_everyone(token, bot, user_id)
         state["messages"][-1] = f"{state['messages'][-1].split('\n')[0]}\nSkipped all chatrooms."
         await update_status_message(bot, user_id, state, "Skipped all chatrooms.")
-
+        
     final_message = f"Total Accounts: {state['total_accounts']}\n\n" + "\n\n".join(state["messages"])
     await bot.edit_message_text(
         chat_id=user_id,
