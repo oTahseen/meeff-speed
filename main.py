@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 API_TOKEN = "7735279075:AAHvefFBqiRUE4NumS0JlwTAiSMzfrgTmqA"
 
 # Admin user IDs
-ADMIN_USER_IDS = [6387028671, 1234567890, 9876543210]  # Replace with actual admin user IDs
+ADMIN_USER_IDS = [6387028671, 6816341239, 6204011131]  # Replace with actual admin user IDs
 
 # Password access dictionary
 password_access = {}
