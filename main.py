@@ -19,8 +19,8 @@ from datetime import datetime, timedelta
 # Tokens
 API_TOKEN = "7735279075:AAHvefFBqiRUE4NumS0JlwTAiSMzfrgTmqA"
 
-# Admin user ID
-ADMIN_USER_ID = 6387028671  # Replace with actual admin user ID
+# Admin user IDs
+ADMIN_USER_IDS = [6387028671, 1234567890, 9876543210]  # Replace with actual admin user IDs
 
 # Password access dictionary
 password_access = {}
@@ -60,8 +60,8 @@ back_markup = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 def is_admin(user_id):
-    return user_id == ADMIN_USER_ID
-
+    return user_id in ADMIN_USER_IDS
+    
 def has_valid_access(user_id):
     if is_admin(user_id):
         return True
