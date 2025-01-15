@@ -113,7 +113,7 @@ async def process_users(session, users, token, user_id):
                                                  f"Batch: {state['batch_index']} Added Friends: {batch_added_friends}\n"
                                                  f"Total Added: {state['total_added_friends']}",
                                             reply_markup=stop_markup)
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
     return False
 
 async def run_requests(user_id):
