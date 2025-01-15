@@ -17,7 +17,7 @@ from aio import aio_markup, aio_callback_handler, run_requests, aio_markup_proce
 from datetime import datetime, timedelta
 
 # Tokens
-API_TOKEN = "7735279075:AAHvefFBqiRUE4NumS0JlwTAiSMzfrgTmqA"
+API_TOKEN = "7780594017:AAFKV25PP5mlWgXT5fpIQt8TaVHpRbfyK2c"
 
 # Admin user IDs
 ADMIN_USER_IDS = [6387028671, 6816341239, 6204011131]  # Replace with actual admin user IDs
