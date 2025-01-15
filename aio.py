@@ -12,7 +12,7 @@ aio_markup = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Start Requests", callback_data="aio_start_requests")],
     [InlineKeyboardButton(text="Hi to Lounge", callback_data="aio_hi_lounge")],
     [InlineKeyboardButton(text="Hi to Chatroom", callback_data="aio_hi_chatroom")],
-    [InlineKeyboardButton(text="Skip", callback_data="aio_skip")]
+    [InlineKeyboardButton(text="Skip", callback_data="aio_skip_confirm")]
 ])
 
 aio_markup_processing = InlineKeyboardMarkup(inline_keyboard=[
@@ -135,8 +135,25 @@ async def aio_callback_handler(callback_query: types.CallbackQuery):
     elif callback_query.data == "aio_hi_chatroom":
         await handle_hi(callback_query, send_message_to_everyone, "chatroom")
 
+    elif callback_query.data == "aio_skip_confirm":
+        await callback_query.message.edit_text(
+            "Are you sure you want to skip all chatrooms?",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="Yes", callback_data="aio_skip")],
+                [InlineKeyboardButton(text="No", callback_data="aio_cancel")]
+            ])
+        )
+        await callback_query.answer("Please confirm your action.")
+
     elif callback_query.data == "aio_skip":
         await handle_skip(callback_query)
+
+    elif callback_query.data == "aio_cancel":
+        await callback_query.message.edit_text(
+            "Cancelled skipping chatrooms.",
+            reply_markup=aio_markup
+        )
+        await callback_query.answer("Action cancelled.")
 
 # Helper functions
 async def handle_hi(callback_query, action, target):
